@@ -168,3 +168,5 @@ app.listen(PORT, () => {
   console.log(`✅ Dashboard running at: http://localhost:${PORT}`);
   console.log(`📊 Open your browser and go to http://localhost:${PORT}`);
 });
+// ✅ Start WhatsApp bot
+require("./index.js");
