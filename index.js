@@ -449,16 +449,18 @@ console.log("🌐 Chromium path:", chromiumPath);
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
-    ...(chromiumPath && { executablePath: chromiumPath }),
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || "/usr/bin/chromium",
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
       "--disable-dev-shm-usage",
       "--disable-gpu",
       "--single-process",
+      "--no-zygote",
     ],
   },
 });
+
 client.on("qr", (qr) => {
   console.log("📱 Scan this QR code with WhatsApp Business:");
   qrcode.generate(qr, { small: true });
