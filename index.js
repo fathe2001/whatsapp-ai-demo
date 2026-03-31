@@ -420,19 +420,45 @@ async function getAIReply(userId, userMessage) {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // إعداد WhatsApp
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const { execSync } = require("child_process");
+
+function findChromium() {
+  const paths = [
+    "/usr/bin/chromium",
+    "/usr/bin/chromium-browser",
+    "/usr/bin/google-chrome",
+    "/run/current-system/sw/bin/chromium",
+    "/nix/var/nix/profiles/default/bin/chromium",
+  ];
+  for (const p of paths) {
+    try {
+      execSync(`test -f ${p}`);
+      return p;
+    } catch {}
+  }
+  try {
+    return execSync("which chromium || which chromium-browser || which google-chrome")
+      .toString().trim();
+  } catch {}
+  return null;
+}
+
+const chromiumPath = findChromium();
+console.log("🌐 Chromium path:", chromiumPath);
+
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
-    executablePath: "/run/current-system/sw/bin/chromium",
+    ...(chromiumPath && { executablePath: chromiumPath }),
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
       "--disable-dev-shm-usage",
       "--disable-gpu",
+      "--single-process",
     ],
   },
 });
-
 client.on("qr", (qr) => {
   console.log("📱 Scan this QR code with WhatsApp Business:");
   qrcode.generate(qr, { small: true });
