@@ -422,7 +422,15 @@ async function getAIReply(userId, userMessage) {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const client = new Client({
   authStrategy: new LocalAuth(),
-  puppeteer: { args: ["--no-sandbox"] },
+  puppeteer: {
+    executablePath: "/run/current-system/sw/bin/chromium",
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+    ],
+  },
 });
 
 client.on("qr", (qr) => {
