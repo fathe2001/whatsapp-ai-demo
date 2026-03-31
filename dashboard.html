@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WhatsBot Pro — لوحة التحكم</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f6fa; color: #1a1a2e; direction: rtl; }
+
+  /* TOP BAR */
+  .topbar { background: white; border-bottom: 1px solid #e8eaf0; padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-icon { width: 40px; height: 40px; background: #1D9E75; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+  .brand-icon svg { width: 22px; height: 22px; fill: white; }
+  .brand-name { font-size: 17px; font-weight: 700; color: #1a1a2e; }
+  .brand-sub { font-size: 11px; color: #888; }
+  .top-right { display: flex; align-items: center; gap: 12px; }
+  .live-badge { display: flex; align-items: center; gap: 6px; background: #e8f8f1; color: #0F6E56; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .live-dot { width: 7px; height: 7px; background: #1D9E75; border-radius: 50%; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+  .btn { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+  .btn-primary { background: #1D9E75; color: white; }
+  .btn-primary:hover { background: #0F6E56; }
+  .btn-ghost { background: transparent; color: #555; border: 1px solid #e0e0e0; }
+  .btn-ghost:hover { background: #f5f5f5; }
+
+  /* LAYOUT */
+  .page { display: grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 60px); }
+
+  /* SIDEBAR */
+  .sidebar { background: white; border-left: 1px solid #e8eaf0; display: flex; flex-direction: column; }
+  .sidebar-section { padding: 16px; border-bottom: 1px solid #f0f0f0; }
+  .sidebar-title { font-size: 11px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+  .client-card { padding: 10px 12px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.15s; margin-bottom: 4px; }
+  .client-card:hover { background: #f5f6fa; }
+  .client-card.active { background: #e8f8f1; }
+  .client-avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .client-info { flex: 1; min-width: 0; }
+  .client-name { font-size: 13px; font-weight: 600; color: #1a1a2e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .client-meta { font-size: 11px; color: #888; margin-top: 2px; }
+  .status-pill { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 600; white-space: nowrap; }
+  .pill-green { background: #e8f8f1; color: #0F6E56; }
+  .pill-gray { background: #f0f0f0; color: #888; }
+  .pill-red { background: #fde8e8; color: #c0392b; }
+
+  /* BOT STATUS */
+  .bot-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f5f5f5; }
+  .bot-row:last-child { border: none; }
+  .bot-name { font-size: 12px; font-weight: 600; color: #1a1a2e; }
+  .bot-time { font-size: 10px; color: #aaa; margin-top: 2px; }
+  .toggle { position: relative; width: 42px; height: 24px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; inset: 0; background: #ddd; border-radius: 24px; cursor: pointer; transition: 0.3s; }
+  .slider:before { content: ''; position: absolute; width: 18px; height: 18px; border-radius: 50%; background: white; bottom: 3px; right: 3px; transition: 0.3s; }
+  input:checked + .slider { background: #1D9E75; }
+  input:checked + .slider:before { transform: translateX(-18px); }
+
+  /* MAIN */
+  .main { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+
+  /* STATS */
+  .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .stat-box { background: white; border-radius: 12px; padding: 16px 18px; border: 1px solid #f0f0f0; }
+  .stat-label { font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-val { font-size: 26px; font-weight: 700; margin-top: 6px; color: #1a1a2e; }
+  .stat-sub { font-size: 11px; margin-top: 4px; }
+  .sub-green { color: #1D9E75; } .sub-blue { color: #2980b9; } .sub-red { color: #e74c3c; }
+
+  /* CONTENT GRID */
+  .content-grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
+
+  /* PANEL */
+  .panel { background: white; border-radius: 14px; border: 1px solid #f0f0f0; overflow: hidden; }
+  .panel-header { padding: 14px 18px; border-bottom: 1px solid #f5f5f5; display: flex; align-items: center; justify-content: space-between; }
+  .panel-title { font-size: 14px; font-weight: 700; color: #1a1a2e; }
+
+  /* TABS */
+  .tabs { display: flex; border-bottom: 1px solid #f0f0f0; }
+  .tab { padding: 12px 18px; font-size: 13px; font-weight: 600; cursor: pointer; color: #888; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; }
+  .tab:hover { color: #1D9E75; }
+  .tab.active { color: #1D9E75; border-bottom-color: #1D9E75; }
+
+  /* REQUESTS */
+  .req-item { border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: background 0.15s; }
+  .req-item:hover { background: #fafafa; }
+  .req-item.open { background: #fafff8; }
+  .req-top { padding: 13px 18px; display: flex; align-items: flex-start; gap: 12px; }
+  .req-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .icon-sick { background: #fdf0eb; }
+  .icon-appt { background: #eaf3fd; }
+  .icon-blood { background: #fdecea; }
+  .icon-med { background: #fef9ec; }
+  .icon-other { background: #f5f5f5; }
+  .req-body { flex: 1; min-width: 0; }
+  .req-title { font-size: 13px; font-weight: 700; color: #1a1a2e; }
+  .req-subtitle { font-size: 11px; color: #888; margin-top: 3px; line-height: 1.6; }
+  .req-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+  .req-time { font-size: 11px; color: #aaa; }
+  .badge { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+  .badge-new { background: #e8f8f1; color: #0F6E56; }
+  .badge-wait { background: #fef3dd; color: #9a6c00; }
+  .badge-done { background: #f0f0f0; color: #888; }
+  .badge-red { background: #fde8e8; color: #c0392b; }
+
+  /* EXPANDED DETAILS */
+  .req-details { padding: 0 18px 16px 18px; border-top: 1px dashed #f0f0f0; display: none; }
+  .req-item.open .req-details { display: block; }
+  .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .detail-cell { background: #f8f9fc; border-radius: 8px; padding: 10px 12px; }
+  .detail-key { font-size: 10px; color: #aaa; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+  .detail-val { font-size: 13px; font-weight: 600; color: #1a1a2e; margin-top: 3px; }
+  .req-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .action-btn { padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid #e0e0e0; background: white; color: #333; transition: all 0.2s; }
+  .action-btn:hover { background: #f5f5f5; }
+  .action-btn.green { background: #1D9E75; color: white; border-color: #1D9E75; }
+  .action-btn.green:hover { background: #0F6E56; }
+  .action-btn.red-btn { color: #e74c3c; border-color: #fde8e8; }
+  .action-btn.red-btn:hover { background: #fde8e8; }
+
+  /* CHARTS */
+  .chart-section { padding: 16px 18px; }
+  .chart-title { font-size: 12px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .bar-label { font-size: 12px; color: #555; width: 110px; flex-shrink: 0; text-align: right; }
+  .bar-track { flex: 1; background: #f0f0f0; border-radius: 4px; height: 10px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+  .bar-count { font-size: 12px; font-weight: 700; color: #1a1a2e; width: 28px; text-align: left; flex-shrink: 0; }
+  .mini-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .mini-card { background: #f8f9fc; border-radius: 10px; padding: 12px; text-align: center; }
+  .mini-val { font-size: 20px; font-weight: 700; }
+  .mini-label { font-size: 10px; color: #888; margin-top: 3px; font-weight: 600; }
+
+  /* EDIT FORM */
+  .edit-form { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.4px; }
+  .form-input { padding: 9px 12px; border: 1px solid #e8eaf0; border-radius: 8px; font-size: 13px; font-family: inherit; color: #1a1a2e; background: white; transition: border 0.2s; width: 100%; }
+  .form-input:focus { outline: none; border-color: #1D9E75; }
+  .form-textarea { padding: 9px 12px; border: 1px solid #e8eaf0; border-radius: 8px; font-size: 13px; font-family: inherit; color: #1a1a2e; resize: none; width: 100%; }
+  .form-textarea:focus { outline: none; border-color: #1D9E75; }
+  .save-btn { background: #1D9E75; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s; align-self: flex-start; }
+  .save-btn:hover { background: #0F6E56; }
+
+  /* SIDE PANELS */
+  .side-panels { display: flex; flex-direction: column; gap: 16px; }
+  .activity-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
+  .activity-item:last-child { border: none; }
+  .act-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+  .act-text { font-size: 12px; color: #555; line-height: 1.5; flex: 1; }
+  .act-time { font-size: 10px; color: #aaa; flex-shrink: 0; }
+
+  /* NOTIFICATION TOAST */
+  .toast { position: fixed; bottom: 24px; left: 24px; background: #1a1a2e; color: white; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; display: none; z-index: 999; animation: slideUp 0.3s ease; }
+  @keyframes slideUp { from{transform:translateY(20px);opacity:0;} to{transform:translateY(0);opacity:1;} }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.555 4.118 1.528 5.845L0 24l6.335-1.508A11.955 11.955 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.006-1.372l-.36-.214-3.724.886.903-3.624-.235-.373A9.818 9.818 0 012.182 12C2.182 6.58 6.58 2.182 12 2.182S21.818 6.58 21.818 12 17.42 21.818 12 21.818z"/></svg>
+    </div>
+    <div>
+      <div class="brand-name">WhatsBot Pro</div>
+      <div class="brand-sub">لوحة إدارة العملاء</div>
+    </div>
+  </div>
+  <div class="top-right">
+    <div class="live-badge"><div class="live-dot"></div> مباشر</div>
+    <button class="btn btn-ghost" onclick="refresh()">تحديث</button>
+    <button class="btn btn-primary" onclick="addClient()">+ عميل جديد</button>
+  </div>
+</div>
+
+<div class="page">
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">العملاء</div>
+      <div id="clients-list">
+        <div class="client-card active" onclick="selectClient(this,'clinic')">
+          <div class="client-avatar" style="background:#e8f8f1;color:#0F6E56;">عن</div>
+          <div class="client-info">
+            <div class="client-name">عيادة النور</div>
+            <div class="client-meta" id="clinic-meta">04-3750228 | 12 طلب</div>
+          </div>
+          <span class="status-pill pill-green">نشط</span>
+        </div>
+        <div class="client-card" onclick="selectClient(this,'restaurant')">
+          <div class="client-avatar" style="background:#eaf3fd;color:#185FA5;">مط</div>
+          <div class="client-info">
+            <div class="client-name">مطعم الأصيل</div>
+            <div class="client-meta">052-1234567 | 0 طلب</div>
+          </div>
+          <span class="status-pill pill-green">نشط</span>
+        </div>
+        <div class="client-card" onclick="selectClient(this,'salon')">
+          <div class="client-avatar" style="background:#f5f5f5;color:#888;">صا</div>
+          <div class="client-info">
+            <div class="client-name">صالون رنا</div>
+            <div class="client-meta">054-9876543 | 0 طلب</div>
+          </div>
+          <span class="status-pill pill-gray">غير نشط</span>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-section" style="flex:1;">
+      <div class="sidebar-title">حالة البوتات</div>
+      <div class="bot-row">
+        <div><div class="bot-name">عيادة النور</div><div class="bot-time" id="clinic-uptime">متصل منذ 3 ساعات</div></div>
+        <label class="toggle"><input type="checkbox" checked onchange="toggleBot('clinic',this)"><span class="slider"></span></label>
+      </div>
+      <div class="bot-row">
+        <div><div class="bot-name">مطعم الأصيل</div><div class="bot-time">متصل منذ يوم</div></div>
+        <label class="toggle"><input type="checkbox" checked onchange="toggleBot('restaurant',this)"><span class="slider"></span></label>
+      </div>
+      <div class="bot-row">
+        <div><div class="bot-name">صالون رنا</div><div class="bot-time">غير متصل</div></div>
+        <label class="toggle"><input type="checkbox" onchange="toggleBot('salon',this)"><span class="slider"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-label">العملاء النشطين</div><div class="stat-val" id="s-active">2</div><div class="stat-sub sub-green">من أصل 3</div></div>
+      <div class="stat-box"><div class="stat-label">طلبات اليوم</div><div class="stat-val" id="s-today">12</div><div class="stat-sub sub-green">↑ +4 من أمس</div></div>
+      <div class="stat-box"><div class="stat-label">رسائل الأسبوع</div><div class="stat-val" id="s-msgs">48</div><div class="stat-sub sub-blue">متوسط 7/يوم</div></div>
+      <div class="stat-box"><div class="stat-label">معدل الاستجابة</div><div class="stat-val">98%</div><div class="stat-sub sub-green">ممتاز</div></div>
+      <div class="stat-box"><div class="stat-label">الإيرادات الشهرية</div><div class="stat-val">₪450</div><div class="stat-sub sub-green">3 عملاء × ₪150</div></div>
+    </div>
+
+    <div class="content-grid">
+      <div class="panel">
+        <div class="tabs">
+          <div class="tab active" onclick="showTab('requests',this)">الطلبات <span id="req-count" style="background:#1D9E75;color:white;font-size:10px;padding:2px 7px;border-radius:20px;margin-right:4px;">12</span></div>
+          <div class="tab" onclick="showTab('stats',this)">إحصائيات</div>
+          <div class="tab" onclick="showTab('edit',this)">معلومات العميل</div>
+        </div>
+
+        <div id="tab-requests">
+          <div id="requests-container">
+            <!-- Requests rendered by JS -->
+          </div>
+        </div>
+
+        <div id="tab-stats" style="display:none;">
+          <div class="chart-section">
+            <div class="mini-stats">
+              <div class="mini-card"><div class="mini-val sub-green" id="c-today">12</div><div class="mini-label">طلبات اليوم</div></div>
+              <div class="mini-card"><div class="mini-val sub-blue">48</div><div class="mini-label">رسائل الأسبوع</div></div>
+              <div class="mini-card"><div class="mini-val">4.0</div><div class="mini-label">رسالة/طلب</div></div>
+            </div>
+            <div class="chart-title">توزيع الطلبات حسب النوع</div>
+            <div class="bar-row"><div class="bar-label">تقرير مرضي</div><div class="bar-track"><div class="bar-fill" style="width:75%;background:#1D9E75;"></div></div><div class="bar-count">9</div></div>
+            <div class="bar-row"><div class="bar-label">تعيين موعد</div><div class="bar-track"><div class="bar-fill" style="width:50%;background:#2980b9;"></div></div><div class="bar-count">6</div></div>
+            <div class="bar-row"><div class="bar-label">فحص دم</div><div class="bar-track"><div class="bar-fill" style="width:33%;background:#e74c3c;"></div></div><div class="bar-count">4</div></div>
+            <div class="bar-row"><div class="bar-label">طلب دواء</div><div class="bar-track"><div class="bar-fill" style="width:25%;background:#f39c12;"></div></div><div class="bar-count">3</div></div>
+            <div class="bar-row"><div class="bar-label">طلب آخر</div><div class="bar-track"><div class="bar-fill" style="width:16%;background:#95a5a6;"></div></div><div class="bar-count">2</div></div>
+            <div class="chart-title" style="margin-top:20px;">أكثر ساعات النشاط</div>
+            <div class="bar-row"><div class="bar-label">8:00 - 11:00</div><div class="bar-track"><div class="bar-fill" style="width:90%;background:#1D9E75;"></div></div><div class="bar-count">18</div></div>
+            <div class="bar-row"><div class="bar-label">16:00 - 19:00</div><div class="bar-track"><div class="bar-fill" style="width:60%;background:#1D9E75;"></div></div><div class="bar-count">12</div></div>
+            <div class="bar-row"><div class="bar-label">11:00 - 16:00</div><div class="bar-track"><div class="bar-fill" style="width:25%;background:#bdc3c7;"></div></div><div class="bar-count">5</div></div>
+          </div>
+        </div>
+
+        <div id="tab-edit" style="display:none;">
+          <div class="edit-form">
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">اسم العيادة / البزنس</label><input class="form-input" id="f-name" value="عيادة النور"></div>
+              <div class="form-group"><label class="form-label">رقم الهاتف</label><input class="form-input" id="f-phone" value="04-3750228"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">صباح الأحد - الخميس</label><input class="form-input" id="f-morning" value="٨:٠٠ - ١١:٠٠"></div>
+              <div class="form-group"><label class="form-label">مساء الأحد - الخميس</label><input class="form-input" id="f-evening" value="١٦:٠٠ - ١٩:٠٠"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">ساعات الجمعة</label><input class="form-input" id="f-fri" value="١٤:٠٠ - ١٧:٠٠"></div>
+              <div class="form-group"><label class="form-label">ساعات السبت</label><input class="form-input" id="f-sat" value="١٠:٠٠ - ١٣:٠٠"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">رقم الدكتور / المدير</label><input class="form-input" id="f-doctor" value="0522411740"></div>
+              <div class="form-group"><label class="form-label">واتساب البزنس</label><input class="form-input" id="f-wa" value="052-450-5228"></div>
+            </div>
+            <div class="form-group"><label class="form-label">لغة الرد التلقائي</label>
+              <select class="form-input" id="f-lang">
+                <option>عربي + عبري (تلقائي حسب المريض)</option>
+                <option>عربي فقط</option>
+                <option>عبري فقط</option>
+                <option>إنجليزي + عربي</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">معلومات إضافية (تظهر في ردود البوت)</label>
+              <textarea class="form-textarea" id="f-extra" rows="3">فحوصات الدم: الأحد - الخميس من ٩:٠٠ حتى ١٢:٠٠ مع موعد مسبق</textarea>
+            </div>
+            <button class="save-btn" onclick="saveInfo()">حفظ وتحديث البوت ←</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="side-panels">
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">آخر النشاطات</span>
+            <span class="status-pill pill-green">مباشر</span>
+          </div>
+          <div style="padding:4px 16px;" id="activity-list">
+            <div class="activity-item">
+              <div class="act-icon icon-sick">🏥</div>
+              <div class="act-text">طلب تقرير مرضي — هوية 212022727</div>
+              <div class="act-time">17:21</div>
+            </div>
+            <div class="activity-item">
+              <div class="act-icon icon-appt">📅</div>
+              <div class="act-text">تعيين موعد — محمد علي</div>
+              <div class="act-time">16:45</div>
+            </div>
+            <div class="activity-item">
+              <div class="act-icon icon-blood">🧪</div>
+              <div class="act-text">فحص دم — صورة دم كاملة</div>
+              <div class="act-time">15:30</div>
+            </div>
+            <div class="activity-item">
+              <div class="act-icon icon-med">💊</div>
+              <div class="act-text">طلب دواء — أموكسيسيلين</div>
+              <div class="act-time">14:10</div>
+            </div>
+            <div class="activity-item">
+              <div class="act-icon icon-sick">🏥</div>
+              <div class="act-text">تقرير مرضي — هوية 310987654</div>
+              <div class="act-time">11:05</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">ملخص سريع</span></div>
+          <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:12px;color:#555;">طلبات منتهية</span>
+              <span style="font-size:13px;font-weight:700;color:#1D9E75;" id="done-count">8</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:12px;color:#555;">طلبات انتظار</span>
+              <span style="font-size:13px;font-weight:700;color:#f39c12;" id="wait-count">4</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:12px;color:#555;">ملخصات أُرسلت للدكتور</span>
+              <span style="font-size:13px;font-weight:700;color:#2980b9;">12</span>
+            </div>
+            <div style="border-top:1px solid #f0f0f0;padding-top:10px;">
+              <button class="btn btn-primary" style="width:100%;text-align:center;" onclick="sendAllToDoctor()">إرسال كل الطلبات للدكتور</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const requests = [
+  { id:0, type:'sick', icon:'🏥', title:'אישור מחלה — تقرير مرضي', subtitle:'هوية: 212022727 | من 27 مارس حتى 29 مارس 2026', badge:'new', time:'17:21',
+    details:[{k:'رقم الهوية',v:'212022727'},{k:'رقم المريض',v:'052-450-5228'},{k:'من تاريخ',v:'27 مارس 2026'},{k:'حتى تاريخ',v:'29 مارس 2026'},{k:'عدد الأيام',v:'3 أيام'},{k:'وقت الطلب',v:'17:21 — اليوم'}]
+  },
+  { id:1, type:'appt', icon:'📅', title:'تعيين موعد', subtitle:'محمد علي | فحص عام | كللت | صباح الأحد', badge:'new', time:'16:45',
+    details:[{k:'الاسم',v:'محمد علي'},{k:'رقم الهوية',v:'301456789'},{k:'نوع الزيارة',v:'أولى'},{k:'سبب الزيارة',v:'فحص عام'},{k:'الأعراض',v:'لا يوجد'},{k:'قوبة حولים',v:'كللت'},{k:'الوقت المفضل',v:'صباح الأحد'},{k:'رقم الهاتف',v:'052-111-2222'}]
+  },
+  { id:2, type:'blood', icon:'🧪', title:'فحص دم', subtitle:'صورة دم كاملة + سكر | صائم: نعم | إحالة: لا', badge:'wait', time:'15:30',
+    details:[{k:'رقم الهوية',v:'208765432'},{k:'رقم الهاتف',v:'054-333-4444'},{k:'نوع الفحص',v:'صورة دم كاملة + سكر'},{k:'صيام',v:'نعم'},{k:'إحالة طبيب',v:'لا'},{k:'أدوية حالية',v:'لا'}]
+  },
+  { id:3, type:'med', icon:'💊', title:'طلب دواء — تجديد روشتة', subtitle:'أموكسيسيلين 500mg | شهري | حساسية: لا', badge:'wait', time:'14:10',
+    details:[{k:'رقم الهوية',v:'319876543'},{k:'رقم الهاتف',v:'050-555-6666'},{k:'نوع الطلب',v:'تجديد روشتة شهرية'},{k:'اسم الدواء',v:'أموكسيسيلين 500mg'},{k:'دواء شهري',v:'نعم'},{k:'السبب',v:'دواء شهري منتظم'},{k:'حساسية',v:'لا'},{k:'أدوية أخرى',v:'لا'}]
+  },
+  { id:4, type:'sick', icon:'🏥', title:'אישור מחלה — تقرير مرضي', subtitle:'هوية: 310987654 | من 25 مارس حتى 27 مارس 2026', badge:'done', time:'11:05',
+    details:[{k:'رقم الهوية',v:'310987654'},{k:'رقم المريض',v:'054-777-8888'},{k:'من تاريخ',v:'25 مارس 2026'},{k:'حتى تاريخ',v:'27 مارس 2026'},{k:'عدد الأيام',v:'3 أيام'},{k:'الحالة',v:'تم المعالجة'}]
+  }
+];
+
+const badgeMap = { new:'badge-new', wait:'badge-wait', done:'badge-done' };
+const badgeLabel = { new:'جديد', wait:'انتظار', done:'منتهي' };
+const iconClass = { sick:'icon-sick', appt:'icon-appt', blood:'icon-blood', med:'icon-med', other:'icon-other' };
+let openReq = null;
+
+function renderRequests() {
+  const container = document.getElementById('requests-container');
+  container.innerHTML = requests.map(r => `
+    <div class="req-item ${openReq===r.id?'open':''}" id="req-${r.id}" onclick="toggleReq(${r.id})">
+      <div class="req-top">
+        <div class="req-icon ${iconClass[r.type]}">${r.icon}</div>
+        <div class="req-body">
+          <div class="req-title">${r.title}</div>
+          <div class="req-subtitle">${r.subtitle}</div>
+        </div>
+        <div class="req-right">
+          <div class="req-time">${r.time}</div>
+          <span class="badge ${badgeMap[r.badge]}">${badgeLabel[r.badge]}</span>
+        </div>
+      </div>
+      <div class="req-details">
+        <div class="details-grid">
+          ${r.details.map(d=>`<div class="detail-cell"><div class="detail-key">${d.k}</div><div class="detail-val">${d.v}</div></div>`).join('')}
+        </div>
+        <div class="req-actions">
+          <button class="action-btn green" onclick="event.stopPropagation();markDone(${r.id})">✓ تم المعالجة</button>
+          <button class="action-btn" onclick="event.stopPropagation();sendToDoc(${r.id})">إرسال للدكتور</button>
+          <button class="action-btn red-btn" onclick="event.stopPropagation();deleteReq(${r.id})">حذف</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleReq(id) {
+  openReq = openReq === id ? null : id;
+  renderRequests();
+}
+
+function markDone(id) {
+  const req = requests.find(r=>r.id===id);
+  if(req) { req.badge='done'; openReq=null; }
+  updateCounts();
+  renderRequests();
+  showToast('تم تحديث حالة الطلب ✓');
+}
+
+function deleteReq(id) {
+  const idx = requests.findIndex(r=>r.id===id);
+  if(idx>-1) { requests.splice(idx,1); openReq=null; }
+  updateCounts();
+  renderRequests();
+  showToast('تم حذف الطلب');
+}
+
+function sendToDoc(id) {
+  showToast('تم إرسال الملخص للدكتور 📤');
+}
+
+function sendAllToDoctor() {
+  showToast('تم إرسال كل الطلبات للدكتور 📤');
+}
+
+function updateCounts() {
+  const done = requests.filter(r=>r.badge==='done').length;
+  const wait = requests.filter(r=>r.badge!=='done').length;
+  document.getElementById('done-count').textContent = done;
+  document.getElementById('wait-count').textContent = wait;
+  document.getElementById('req-count').textContent = requests.length;
+  document.getElementById('s-today').textContent = requests.length;
+  document.getElementById('c-today').textContent = requests.length;
+}
+
+function showTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  ['requests','stats','edit'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display = t===name?'block':'none';
+  });
+}
+
+function selectClient(el, key) {
+  document.querySelectorAll('.client-card').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function toggleBot(name, checkbox) {
+  showToast(checkbox.checked ? `تم تشغيل بوت ${name} ✓` : `تم إيقاف بوت ${name}`);
+}
+
+function saveInfo() {
+  showToast('تم حفظ معلومات العيادة وتحديث البوت ✓');
+}
+
+function refresh() {
+  showToast('تم التحديث ✓');
+  // In production: fetch('/api/requests').then(...)
+}
+
+function addClient() {
+  showToast('ميزة إضافة عميل قيد التطوير 🚀');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(()=>t.style.display='none', 3000);
+}
+
+// Auto-refresh every 10 seconds (in production fetches from server)
+setInterval(() => {
+  const up = document.getElementById('clinic-uptime');
+  if(up) {
+    const mins = Math.floor(Math.random()*5)+180;
+    up.textContent = `متصل منذ ${Math.floor(mins/60)} ساعات`;
+  }
+}, 10000);
+
+// ✅ Fetch real data from server
+async function loadFromServer() {
+  try {
+    // Load requests
+    const reqRes = await fetch("/api/requests?clientId=clinic");
+    const reqs = await reqRes.json();
+
+    if (reqs.length > 0) {
+      // Clear hardcoded requests
+      requests.length = 0;
+
+      // Map server data to dashboard format
+      reqs.forEach((r, i) => {
+        const typeMap = {
+          "אישור מחלה": { type: "sick", icon: "🏥" },
+          "تعيين موعد":  { type: "appt", icon: "📅" },
+          "فحص دم":      { type: "blood", icon: "🧪" },
+          "طلب دواء":    { type: "med", icon: "💊" },
+          "طلب آخر":     { type: "other", icon: "❓" },
+        };
+        const mapped = typeMap[r.type] || { type: "other", icon: "❓" };
+
+        // Build details array from request fields
+        const details = Object.entries(r)
+          .filter(([k]) => !["id","clientId","status","createdAt","type"].includes(k))
+          .map(([k, v]) => ({ k, v }));
+
+        requests.push({
+          id: i,
+          serverId: r.id,
+          type: mapped.type,
+          icon: mapped.icon,
+          title: r.type,
+          subtitle: r.phone ? `📱 ${r.phone} | 🪪 ${r.id_number || ""}` : "",
+          badge: r.status === "done" ? "done" : "new",
+          time: new Date(r.createdAt).toLocaleTimeString("ar-IL", { hour: "2-digit", minute: "2-digit" }),
+          details,
+        });
+      });
+    }
+
+    // Load stats
+    const statsRes = await fetch("/api/stats");
+    const stats = await statsRes.json();
+    document.getElementById("s-active").textContent = stats.activeClients;
+    document.getElementById("s-today").textContent = stats.todayRequests;
+    document.getElementById("s-msgs").textContent = stats.totalRequests;
+
+  } catch (err) {
+    console.log("Server not connected, showing demo data");
+  }
+
+  renderRequests();
+  updateCounts();
+}
+
+// ✅ Auto-refresh every 5 seconds
+loadFromServer();
+setInterval(loadFromServer, 5000);
+</script>
+</body>
+</html>
